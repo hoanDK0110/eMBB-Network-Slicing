@@ -7,7 +7,7 @@ Trước tiên, hãy clone repository này về máy của bạn bằng lệnh s
 
 git clone https://github.com/hoanDK0110/eMBB-Network-Slicing.git
 
-## 2 Cấu trúc Thư mục
+## 2. Cấu trúc Thư mục
 
 Thư mục code được chia thành các file, mỗi file sẽ đảm nhiệm một chức năng cụ thể:
 
@@ -17,16 +17,13 @@ Thư mục code được chia thành các file, mỗi file sẽ đảm nhiệm m
 - `RAN_topo.py`: Tạo mô hình mạng.
 - `solving.py`: Chạy thuật toán và giải quyết vấn đề.
 - `benchmark.py`: Đo đạc thông số sau khi tính toán.
-
-## Thư mục Kết quả
-
 - `result/`: Thư mục này chứa các kết quả sau khi chạy chương trình.
 
-## Cách Chạy Code
+## 3. Cách Chạy Code
 
-1. Đảm bảo bạn đã cài đặt tất cả các thư viện cần thiết.
-2. Mở terminal và điều hướng đến thư mục chứa `main.py`.
-3. Chạy chương trình bằng lệnh:
+- Đảm bảo bạn đã cài đặt tất cả các thư viện cần thiết.
+- Mở terminal và điều hướng đến thư mục chứa `main.py`.
+- Chạy chương trình bằng lệnh:
 
    ```bash
    python main.py
