@@ -5,7 +5,8 @@
 
 Trước tiên, hãy clone repository này về máy của bạn bằng lệnh sau:
 
-git clone https://github.com/hoanDK0110/eMBB-Network-Slicing.git
+   ```bash
+   git clone https://github.com/hoanDK0110/eMBB-Network-Slicing.git
 
 ## 2. Cấu trúc Thư mục
 
