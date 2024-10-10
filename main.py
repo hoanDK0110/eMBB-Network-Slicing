@@ -2,7 +2,7 @@ import gen_RU_UE
 import wireless
 import RAN_topo
 import solving
-import bencmark
+import benchmark
 
 num_RUs = 4         # Số lượng RU (bao gồm RU ở tâm)
 num_DUs = 2         # Số lượng DU
