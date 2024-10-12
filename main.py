@@ -8,11 +8,14 @@ num_RUs = 4         # Số lượng RU (bao gồm RU ở tâm)
 num_DUs = 2         # Số lượng DU
 num_CUs = 2         # Số lượng CU
 num_UEs = 3         # Số lượng user eMBB
+num_Slice = 3       # Số lượng slice s
 radius_in = 100     # Bán kính vòng tròn trong
 radius_out = 1000   # Bán kính vòng tròn ngoài
 num_RBs = 100       # Số lượng của RBs
 num_antennas = 8    # Số lượng anntenas
 noise_power_watts = 1e-10
+P_max = 100
+R_min = 10
 
 # Tạo tọa độ
 coordinates_RU = gen_RU_UE.gen_coordinates_RU(num_RUs, radius_out)                  #Toạ toạ độ RU
