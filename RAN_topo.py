@@ -32,7 +32,8 @@ def create_topo(num_RUs, num_DUs, num_CUs):
         'DU1': (1, 2.5), 'DU2': (1, 0.5),
         'CU1': (2, 2), 'CU2': (2, 1)
     }
-
+    # print(G.edges)
+    # print(G.nodes)
     # Vẽ đồ thị
     plt.figure(figsize=(8, 6))
     nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=2000, 
