@@ -4,18 +4,21 @@ import RAN_topo
 import solving
 import benchmark
 
-num_RUs = 4         # Số lượng RU (bao gồm RU ở tâm)
-num_DUs = 2         # Số lượng DU
-num_CUs = 2         # Số lượng CU
-num_UEs = 3         # Số lượng user eMBB
-num_Slice = 3       # Số lượng slice s
-radius_in = 100     # Bán kính vòng tròn trong
-radius_out = 1000   # Bán kính vòng tròn ngoài
-num_RBs = 100       # Số lượng của RBs
-num_antennas = 8    # Số lượng anntenas
+num_RUs = 4                 # Số lượng RU (bao gồm RU ở tâm) I
+num_DUs = 2                 # Số lượng DU                    J
+num_CUs = 2                 # Số lượng CU                    M
+num_UEs = 3                 # Số lượng user eMBB             k
+radius_in = 100             # Bán kính vòng tròn trong
+radius_out = 1000           # Bán kính vòng tròn ngoài
+num_RBs = 100               # Số lượng của RBs              Bi
+num_antennas = 8            # Số lượng anntenas             
 noise_power_watts = 1e-10
-P_max = 100
-R_min = 10
+max_tx_power_watts = 43     #Pi_max
+R_sk = 1e6                  #minimum requirenment throughput (10mbps)
+rb_bandwidth = 180e3 
+#những biến chưa xác định giá trị
+A_j = {} 
+D_du = {}
 
 # Tạo tọa độ
 coordinates_RU = gen_RU_UE.gen_coordinates_RU(num_RUs, radius_out)                  #Toạ toạ độ RU
@@ -30,7 +33,6 @@ distances_RU_UE = gen_RU_UE.calculate_distances(coordinates_RU, coordinates_UE, 
 # Tính độ lợi của kênh truyền 
 gain = wireless.channel_gain(distances_RU_UE, num_RUs, num_UEs, num_RBs, noise_power_watts, num_antennas)
 
-RAN_topo.create_topo(num_RUs, num_DUs, num_CUs)
+l_RU_DU,l_DU_CU = RAN_topo.create_topo(num_RUs, num_DUs, num_CUs)
 
-
-
+solving(num_UEs, num_DUs, num_RUs, num_RBs, num_CUs, max_tx_power_watts, gain, R_sk, rb_bandwidth, A_j, D_du, l_RU_DU, l_DU_CU)

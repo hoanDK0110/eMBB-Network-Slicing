@@ -1,7 +1,7 @@
 import cvxpy as cp
 import numpy as np
 
-def optimizing(num_UEs, num_DUs, num_RUs, num_CUs, num_RBs, max_tx_power_watts, z_ue, g_ue, R_sk, rb_bandwidth, D_du, A_j, Phi_i_s_k, Phi_j_s_k, Phi_m_s_k):
+def optimizing(num_UEs, num_DUs, num_RUs, num_CUs, num_RBs, max_tx_power_watts, z_ue, g_ue, R_sk, rb_bandwidth, D_du, A_j, Phi_i_s_k, Phi_j_s_k, Phi_m_s_k, l_RU_DU, l_DU_CU):
     # Khởi tạo biến
     pi_sk = cp.Variable((num_RUs, num_UEs), integer=True)  
     p_ue_ur = np.empty((num_RUs, num_UEs, num_RBs), dtype=object)
@@ -70,27 +70,17 @@ def optimizing(num_UEs, num_DUs, num_RUs, num_CUs, num_RBs, max_tx_power_watts, 
                 constraints.append(z_ue[i,k,b] >= Phi_i_s_k[i, :, k] - 1)
 
     # Ràng buộc (15j)
-    connection_ij = cp.Variable((num_RUs, num_DUs), boolean=True)
     for i in range(num_RUs):
         for j in range(num_DUs):
-            # Ràng buộc 15j
-            constraints.append(Phi_j_s_k[j, :, :] <= connection_ij[i, j] - Phi_i_s_k[i, :, :] + 1)
-            # Tạo và kiểm tra sự liên kết
-            constraints.append(connection_ij[i, j] <= 1)
-            constraints.append(connection_ij[i, j] >= 0)
+            constraints.append(Phi_j_s_k[j, :, :] <= l_RU_DU[i, j] - Phi_i_s_k[i, :, :] + 1)
 
     # Ràng buộc (15k)
-    connection_jm = cp.Variable((num_DUs, num_CUs), boolean=True)
     for j in range(num_DUs):
         for m in range(num_CUs):
-            # Ràng buộc 15k
-            constraints.append(Phi_m_s_k[m, :, :] <= connection_jm[j, m] - Phi_j_s_k[j, :, :] + 1)
-            # Tạo và kiểm tra sự liên kết
-            constraints.append(connection_jm[j, m] <= 1)
-            constraints.append(connection_jm[j, m] >= 0)
-
+            constraints.append(Phi_m_s_k[m, :, :] <= l_DU_CU[j, m] - Phi_j_s_k[j, :, :] + 1)
+            
     # Giải bài toán tối ưu
     problem = cp.Problem(objective, constraints)
     problem.solve(solver=cp.MOSEK)
 
-    return pi_sk.value, p_ue_ur, connection_ij.value, connection_jm.value
+    return pi_sk.value, p_ue_ur
