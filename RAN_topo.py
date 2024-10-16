@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
 
 def create_topo(num_RUs, num_DUs, num_CUs):
     # Tạo đồ thị
@@ -35,9 +36,23 @@ def create_topo(num_RUs, num_DUs, num_CUs):
     # print(G.edges)
     # print(G.nodes)
     # Vẽ đồ thị
+    l_RU_DU = np.zeros((num_RUs, num_DUs), dtype=int)
+    for edge in G.edges:
+        node1, node2 = edge
+
+    if node1 in RUs and node2 in DUs:
+        i = RUs.index(node1) 
+        j = DUs.index(node2)  
+        l_RU_DU[i, j] = 1  
+
+    elif node1 in DUs and node2 in RUs:
+        i = RUs.index(node2)  
+        j = DUs.index(node1)  
+        l_RU_DU[i, j] = 1  
+    l_DU_CU = np.ones((num_DUs, num_CUs), dtype=int)
     plt.figure(figsize=(8, 6))
     nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=2000, 
             font_size=10, font_weight='bold', edge_color='gray')
     plt.title(f"Network Model: {num_RUs} RU, {num_DUs} DU, {num_CUs} CU (Column Layout)", fontsize=15)
     plt.show()
-
+    return l_RU_DU, l_DU_CU
