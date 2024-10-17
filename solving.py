@@ -1,12 +1,7 @@
 import cvxpy as cp
 import numpy as np
 
-def optimizing(num_UE, num_DU, num_RU, num_RB, num_CU, max_tx_power_watts, g_ue, R_sk, rb_bandwidth, A_j, D_du,l_RU_DU,l_DU_CU):
-    z_ue = cp.Variable((num_RU, num_UE, num_RB), boolean=True)
-    Phi_i_s_k = cp.Variable((num_RU, 1, num_UE), boolean=True)
-    Phi_j_s_k = cp.Variable((num_DU, 1, num_UE), boolean=True)
-    Phi_m_s_k = cp.Variable((num_CU, 1, num_UE), boolean=True)
-    pi_sk =  cp.Variable(integer=True)
+def optimizing(num_UE, num_DU, num_RU, num_RB, num_CU, max_tx_power_watts, g_ue, R_sk, rb_bandwidth, A_j, A_m, D_du, D_cu,l_RU_DU,l_DU_CU,z_ue,pi_sk,Phi_i_s_k,Phi_j_s_k,Phi_m_s_k):
     obj = cp.Variable
     objective = cp.maximum
     constraint= []
@@ -41,11 +36,15 @@ def optimizing(num_UE, num_DU, num_RU, num_RB, num_CU, max_tx_power_watts, g_ue,
     #constraint 15d
     for j in range(num_DU):
         temp3 = 0
-        for i in range(num_RU):
-            for b in range(num_RB):
-                for k in range(num_UE):
-                    temp3 += Phi_i_s_k[i, :, k] * D_du[k]
+        for k in range(num_UE):
+            temp3 += Phi_j_s_k[j, :, k] * D_du[k]
         constraint.append(temp3 <= A_j[j])
+    #constraint 15e
+    for m in range(num_CU):
+        temp4 = 0
+        for k in range(num_UE):
+            temp4 += Phi_m_s_k[m, :, k] * D_cu[k]
+        constraint.append(temp4 <= A_m[m])
     # contraints (15f), (15g), (15h)
     for k in range(num_UE):
         temp_ru = 0
