@@ -1,10 +1,8 @@
 import cvxpy as cp
 import numpy as np
 
-def optimizing(num_UEs, num_DUs, num_RUs, num_CUs, num_RBs, max_tx_power_watts, z_ue, g_ue, R_sk, rb_bandwidth, D_du, A_j, Phi_i_s_k, Phi_j_s_k, Phi_m_s_k, l_RU_DU, l_DU_CU):
-    # Khởi tạo biến
-    pi_sk = cp.Variable((num_RUs, num_UEs), integer=True)  
-    p_ue_ur = np.empty((num_RUs, num_UEs, num_RBs), dtype=object)
+def optimizing(pi_sk, num_UEs, num_DUs, num_RUs, num_CUs, num_RBs, max_tx_power_watts, z_ue, g_ue, p_ue_ur, R_sk, rb_bandwidth, D_du, D_cu, A_j, A_m, Phi_i_s_k, Phi_j_s_k, Phi_m_s_k, l_RU_DU, l_DU_CU):
+
 
     # Tạo biến công suất truyền cho từng RU, user, RB
     for i in range(num_RUs):
@@ -39,11 +37,16 @@ def optimizing(num_UEs, num_DUs, num_RUs, num_CUs, num_RBs, max_tx_power_watts, 
     # Ràng buộc (15d)
     for j in range(num_DUs):
         temp3 = 0
-        for i in range(num_RUs):
-            for b in range(num_RBs):
-                for k in range(num_UEs):
-                    temp3 += Phi_i_s_k[i, :, k] * D_du[k]
+        for k in range(num_UEs):
+            temp3 += Phi_j_s_k[j, :, k] * D_du[k]
         constraints.append(temp3 <= A_j[j])
+        
+    # Ràng buộc (15e)
+    for m in range(num_CUs):
+        temp4 = 0
+        for k in range(num_UEs):
+            temp4 += Phi_m_s_k[m, :, k] * D_cu[k]
+        constraints.append(temp4 <= A_m[m])    
 
     # Ràng buộc (15f), (15g), (15h)
     for k in range(num_UEs):
