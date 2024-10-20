@@ -17,9 +17,9 @@ def channel_gain(distances_RU_UE, num_RUs, num_UEs, num_RBs, noise_power_watts, 
     #print("path_loss_linear:", path_loss_linear)
     
     # Tính độ lợi kênh cho từng RU, UE và RB
-    for i in range(num_RUs):  # Duyệt qua các RU
-        for k in range(num_UEs):  # Duyệt qua các UE
-            for b in range(num_RBs):  # Duyệt qua các RB
+    for i in range(num_RUs):  
+        for k in range(num_UEs):  
+            for b in range(num_RBs):  
                 # Lấy độ lợi kênh cho cặp (RU, UE)
                 channel_gain = path_loss_linear[i, k] / noise_power_watts
                 
@@ -27,7 +27,7 @@ def channel_gain(distances_RU_UE, num_RUs, num_UEs, num_RBs, noise_power_watts, 
                 h = np.sqrt(channel_gain) * np.sqrt(1/2) * (np.random.randn(num_antennas) + 1j * np.random.randn(num_antennas))
                 #print("h:", h)
                 # Tính norm của ma trận h
-                gain[i, k, b] = norm(h, 2) ** 2  # Lưu giá trị vào mảng gain
+                gain[i, k, b] = norm(h, 2) ** 2  
     return gain
 
 def allocate_power(num_RUs, U_em, num_RBs, max_tx_power_watts):

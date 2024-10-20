@@ -1,7 +1,9 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
 
-def create_topo(num_RUs, num_DUs, num_CUs):
+
+def create_topo(num_RUs, num_DUs, num_CUs, capacity_node):
     G = nx.Graph()
 
     # Tạo danh sách các nút RU, DU và CU
@@ -11,9 +13,9 @@ def create_topo(num_RUs, num_DUs, num_CUs):
 
     # Thêm các nút DU và CU vào đồ thị
     for du in DUs:
-        G.add_node(du, type='DU', capacity=100)
+        G.add_node(du, type='DU', capacity=capacity_node)
     for cu in CUs:
-        G.add_node(cu, type='CU', capacity=100)
+        G.add_node(cu, type='CU', capacity=capacity_node)
     for ru in RUs:
         G.add_node(ru, type='RU')
 
@@ -66,8 +68,6 @@ def draw_topo(G):
     plt.axis('off')  # Tắt trục
     plt.tight_layout()  # Điều chỉnh bố cục
     plt.show()
-    
-import numpy as np
 
 def get_links(G):
     # Lấy danh sách các RU, DU và CU từ đồ thị
@@ -91,7 +91,6 @@ def get_links(G):
             l_du_cu[DUs.index(v), CUs.index(u)] = 1
 
     return l_ru_du, l_du_cu
-
 
 def get_node_cap(G):
     du_weights = []  # Mảng chứa trọng số của các nút DU
