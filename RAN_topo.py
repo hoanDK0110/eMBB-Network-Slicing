@@ -2,45 +2,51 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 
-def create_topo(num_RUs, num_DUs, num_CUs):
-    # Tạo đồ thị
+
+def create_topo(num_RUs, num_DUs, num_CUs, capacity_node):
     G = nx.Graph()
 
-    # Tạo danh sách các nút và dung lượng
+    # Tạo danh sách các nút RU, DU và CU
     RUs = [f'RU{i+1}' for i in range(num_RUs)]
     DUs = [f'DU{i+1}' for i in range(num_DUs)]
     CUs = [f'CU{i+1}' for i in range(num_CUs)]
 
-    # Thêm các nút vào đồ thị với dung lượng = 100
-    for ru in RUs:
-        G.add_node(ru, type='RU', capacity=100)
+    # Thêm các nút DU và CU vào đồ thị
     for du in DUs:
-        G.add_node(du, type='DU', capacity=100)
+        G.add_node(du, type='DU', capacity=capacity_node)
     for cu in CUs:
-        G.add_node(cu, type='CU', capacity=100)
+        G.add_node(cu, type='CU', capacity=capacity_node)
+    for ru in RUs:
+        G.add_node(ru, type='RU')
 
-    # Liên kết các DUs với CUs (fully connected)
+    # Liên kết các DUs với CUs
     for du in DUs:
         for cu in CUs:
             G.add_edge(du, cu)
 
-    # Tính số lượng RU mỗi DU kết nối
-    ru_per_du = max(1, num_RUs // num_DUs)  # Tránh chia cho 0
-
-    # Kết nối RUs với DUs theo tỉ lệ đã cho
+    # Kết nối RUs với DUs
+    ru_per_du = max(1, num_RUs // num_DUs)
     for i in range(0, num_RUs, ru_per_du):
         du_index = i // ru_per_du
-        if du_index < num_DUs:  # Kiểm tra chỉ số DU có hợp lệ không
+        if du_index < num_DUs:
             for j in range(ru_per_du):
-                if i + j < num_RUs:  # Kiểm tra xem RU có tồn tại không
-                    G.add_edge(RUs[i + j], DUs[du_index])  # Kết nối RU với DU tương ứng
+                if i + j < num_RUs:
+                    G.add_edge(RUs[i + j], DUs[du_index])
 
     # Kết nối các RU dư với các DU cuối
     remainder = num_RUs % num_DUs
     if remainder > 0:
         for j in range(remainder):
-            G.add_edge(RUs[-(j + 1)], DUs[-(j + 1)])  # Kết nối RU dư với DU cuối
+            G.add_edge(RUs[-(j + 1)], DUs[-(j + 1)])
+    return G
 
+
+# Hàm vẽ đồ thị
+def draw_topo(G):
+    # Lọc các nút RU, DU và CU từ đồ thị dựa trên thuộc tính 'type'
+    RUs = [node for node, data in G.nodes(data=True) if data['type'] == 'RU']
+    DUs = [node for node, data in G.nodes(data=True) if data['type'] == 'DU']
+    CUs = [node for node, data in G.nodes(data=True) if data['type'] == 'CU']
     # Vị trí của các nút: RU, DU, CU xếp thành cột
     pos = {ru: (0, 3 - i) for i, ru in enumerate(RUs)}
     pos.update({du: (1, 2.5 - i * 2) for i, du in enumerate(DUs)})
@@ -54,22 +60,47 @@ def create_topo(num_RUs, num_DUs, num_CUs):
     node_colors = ['lightblue' if 'RU' in node else 'lightgreen' if 'DU' in node else 'lightcoral' for node in G.nodes()]
     nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=2000, linewidths=2)
 
-    # Hiển thị dung lượng mỗi nút trên đồ thị
-    node_labels = {node: f"{node}\nCap: {data['capacity']}" for node, data in G.nodes(data=True)}
+    # Hiển thị dung lượng chỉ cho các nút DU và CU
+    node_labels = {node: f"{node}\nCap: {data['capacity']}" if 'capacity' in data else f"{node}" for node, data in G.nodes(data=True)}
     nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=10, font_weight='bold', font_color='black')
 
-    plt.title(f"Network Model: {num_RUs} RU, {num_DUs} DU, {num_CUs} CU (Column Layout)", fontsize=15)
+    plt.title(f"Network Model: {len(RUs)} RU, {len(DUs)} DU, {len(CUs)} CU (Column Layout)", fontsize=15)
     plt.axis('off')  # Tắt trục
     plt.tight_layout()  # Điều chỉnh bố cục
     plt.show()
 
-    return G
+def get_links(G):
+    # Lấy danh sách các RU, DU và CU từ đồ thị
+    RUs = [node for node, data in G.nodes(data=True) if data['type'] == 'RU']
+    DUs = [node for node, data in G.nodes(data=True) if data['type'] == 'DU']
+    CUs = [node for node, data in G.nodes(data=True) if data['type'] == 'CU']
 
-def edge_detect(G,num_DUs,num_RUs,num_CUs):
-    l_RU_DU = np.zeros((num_RUs, num_DUs), dtype=int)
-    for edge in G.edges:
-        node1, node2 = edge
-    if node1 in num_RUs and node2 in num_DUs:
-        i = num_RUs.index(node1) 
-        j = num_DUs.index(node2)  
-        l_RU_DU[i, j] = 1
+    # Khởi tạo ma trận liên kết với tất cả các giá trị ban đầu là 0
+    l_ru_du = np.zeros((len(RUs), len(DUs)), dtype=int)  
+    l_du_cu = np.zeros((len(DUs), len(CUs)), dtype=int)  
+
+    # Duyệt qua các cạnh để cập nhật ma trận liên kết
+    for u, v in G.edges():
+        if G.nodes[u]['type'] == 'RU' and G.nodes[v]['type'] == 'DU':
+            l_ru_du[RUs.index(u), DUs.index(v)] = 1
+        elif G.nodes[u]['type'] == 'DU' and G.nodes[v]['type'] == 'RU':
+            l_ru_du[RUs.index(v), DUs.index(u)] = 1
+        elif G.nodes[u]['type'] == 'DU' and G.nodes[v]['type'] == 'CU':
+            l_du_cu[DUs.index(u), CUs.index(v)] = 1
+        elif G.nodes[u]['type'] == 'CU' and G.nodes[v]['type'] == 'DU':
+            l_du_cu[DUs.index(v), CUs.index(u)] = 1
+
+    return l_ru_du, l_du_cu
+
+def get_node_cap(G):
+    du_weights = []  # Mảng chứa trọng số của các nút DU
+    cu_weights = []  # Mảng chứa trọng số của các nút CU
+
+    # Duyệt qua tất cả các nút trong đồ thị
+    for node, data in G.nodes(data=True):
+        if data['type'] == 'DU':  # Nếu nút là DU
+            du_weights.append(data['capacity'])
+        elif data['type'] == 'CU':  # Nếu nút là CU
+            cu_weights.append(data['capacity'])
+
+    return du_weights, cu_weights
