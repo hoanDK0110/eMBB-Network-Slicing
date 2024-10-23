@@ -25,6 +25,7 @@ D_m = 20                                # yêu cầu tài nguyên của node CU
 R_min = 1e6                             # Data rate ngưỡng yêu cầu
 epsilon = 1e-6
 
+
 # Tạo toạ độ RU, UE
 coordinates_RU = gen_RU_UE.gen_coordinates_RU(num_RUs, radius_out)                  
 coordinates_UE = gen_RU_UE.gen_coordinates_UE(num_UEs, radius_in, radius_out)
@@ -47,10 +48,10 @@ gain = wireless.channel_gain(distances_RU_UE, num_RUs, num_UEs, num_RBs, noise_p
 # Tính phân bổ công suất
 P_bi_sk = wireless.allocate_power(num_RUs, num_UEs, num_RBs, max_tx_power_watts)
 
-# Solve tối ưu hóa
+# Solve tối ưu hóa ngắn hạn
 pi_sk, z_bi_sk, phi_i_sk, phi_j_sk, phi_m_sk = solving.optimize(num_UEs, num_RUs, num_DUs, num_CUs, num_RBs, max_tx_power_watts, rb_bandwidth, D_j, D_m, R_min, gain, P_bi_sk, A_j, A_m, l_ru_du, l_du_cu, epsilon)
 
-# Check feasibility
+# Check feasibility ngắn hạn
 if pi_sk is not None:
     feasibility_report = solving.check_feasibility(
         pi_sk=pi_sk, 
@@ -78,9 +79,39 @@ if pi_sk is not None:
     )
     
     # In kết quả kiểm tra tính khả thi
-    print("\nFeasibility Check Report:")
+    print("\nFeasibility Check Report (Ngắn hạn):")
     for key, is_feasible in feasibility_report.items():
         print(f"{key}: {'Đúng' if is_feasible else 'Sai'}")
+        
+    print("\nGiá trị z_bi_sk:")
+    for key, var in z_bi_sk.items():
+        print(f"z_bi_sk[{key}] = {var.value}")
+
+# Solve tối ưu hóa dài hạn
+pi_long_term, phi_i_long_term, phi_j_long_term, phi_m_long_term = solving.long_term_optimization(
+    pi_sk=pi_sk, 
+    phi_i_sk=phi_i_sk, 
+    phi_j_sk=phi_j_sk, 
+    phi_m_sk=phi_m_sk,
+    l_ru_du=l_ru_du,
+    l_du_cu=l_du_cu,
+    num_UEs=num_UEs,
+    num_RUs=num_RUs,
+    num_DUs=num_DUs,
+    num_CUs=num_CUs,
+    D_j=D_j,
+    D_m=D_m,
+    A_j=A_j,
+    A_m=A_m
+)
+
+# In kết quả tối ưu hóa dài hạn
+if pi_long_term is not None:
+    print("\nKết quả tối ưu hóa dài hạn:")
+    print(f"pi_long_term: {pi_long_term.value}")
+    print(f"phi_i_long_term: {phi_i_long_term.value}")
+    print(f"phi_j_long_term: {phi_j_long_term.value}")
+    print(f"phi_m_long_term: {phi_m_long_term.value}")
 
 # Show kết quả ánh xạ (benchmark)
 benchmark.print_mapping(pi_sk, z_bi_sk, phi_i_sk, phi_j_sk, phi_m_sk)

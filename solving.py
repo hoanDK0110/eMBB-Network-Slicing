@@ -151,3 +151,51 @@ def optimize(num_UEs, num_RUs, num_DUs, num_CUs, num_RBs, max_tx_power_watts, rb
         return None, None, None, None, None
     except Exception as e:
         print(f"Lỗi xảy ra: {e}")
+
+# Hàm long-term tối ưu hóa tại NON-RT RIC
+def long_term_optimization(pi_sk, phi_j_sk, phi_i_sk, phi_m_sk, num_UEs, num_RUs, num_DUs, num_CUs, D_j, D_m, A_j, A_m, l_ru_du, l_du_cu):
+    try:
+        # Hàm mục tiêu: Maximize tổng số người dùng được chấp nhận
+        objective = cp.Maximize(cp.sum(pi_sk))
+
+        # Danh sách ràng buộc
+        constraints = []
+
+        # Ràng buộc (15d) trên DUs
+        for j in range(num_DUs):
+            count_du = cp.sum(phi_j_sk[j, :]) * D_j
+            constraints.append(count_du <= A_j[j])
+
+        # Ràng buộc (15e) trên CUs
+        for m in range(num_CUs):
+            count_cu = cp.sum(phi_m_sk[m, :]) * D_m
+            constraints.append(count_cu <= A_m[m])
+
+        # Ràng buộc 15f, 15g, 15h: matching constraint giữa các phi và pi
+        for k in range(num_UEs):
+            constraints.append(cp.sum(phi_i_sk[:, k]) == pi_sk[k])
+            constraints.append(cp.sum(phi_j_sk[:, k]) == pi_sk[k])
+            constraints.append(cp.sum(phi_m_sk[:, k]) == pi_sk[k])
+
+        # Ràng buộc (15j) giữa RUs và DUs
+        for i in range(num_RUs):
+            for j in range(num_DUs):
+                constraints.append(phi_j_sk[j, :] <= l_ru_du[i, j] - phi_i_sk[i, :] + 1)
+
+        # Ràng buộc (15k) giữa DUs và CUs
+        for j in range(num_DUs):
+            for m in range(num_CUs):
+                constraints.append(phi_m_sk[m, :] <= l_du_cu[j, m] - phi_j_sk[j, :] + 1)
+
+        # Giải bài toán tối ưu
+        problem = cp.Problem(objective, constraints)
+        problem.solve(solver=cp.MOSEK)
+
+        # Trả về các biến đã tối ưu
+        return pi_sk, phi_i_sk, phi_j_sk, phi_m_sk
+
+    except cp.SolverError:
+        print('Lỗi solver: không khả thi')
+        return None, None, None, None
+    except Exception as e:
+        print(f"Lỗi xảy ra: {e}")

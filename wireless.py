@@ -30,16 +30,26 @@ def channel_gain(distances_RU_UE, num_RUs, num_UEs, num_RBs, noise_power_watts, 
                 gain[i, k, b] = norm(h, 2) ** 2  
     return gain
 
-def allocate_power(num_RUs, U_em, num_RBs, max_tx_power_watts):
+def allocate_power(num_RUs, num_UEs, num_RBs, max_tx_power_watts, gain, user_requests):
+    
+    user_requests = np.random.uniform(0, 20, num_UEs)
 
     # Khởi tạo ma trận công suất
-    p_bi_sk = np.zeros((num_RUs, U_em, num_RBs))
+    p_bi_sk = np.zeros((num_RUs, num_UEs, num_RBs))
 
-    # Tính toán công suất tối đa phân bổ cho mỗi RB
-    pp = max_tx_power_watts / num_RBs
+    # Tính tổng yêu cầu tài nguyên của tất cả các user
+    total_user_request = np.sum(user_requests)
 
-    # Phân bổ công suất cho từng RU cho dịch vụ eMBB
+    # Tính toán công suất cấp phát dựa trên yêu cầu của user và điều kiện kênh truyền
     for i in range(num_RUs):
-        p_bi_sk[i, :, :] = pp * np.ones((U_em, num_RBs))
+        for k in range(num_UEs):
+            # Tính tổng độ lợi kênh cho tất cả các RB giữa RU và UE
+            total_gain = np.sum(gain[i, k, :])
+
+            # Điều chỉnh công suất theo độ lợi kênh và yêu cầu của user
+            if total_gain > 0 and user_requests[k] > 0:
+                # Công suất phân bổ cho mỗi RB theo yêu cầu tài nguyên và độ lợi kênh
+                power_allocation_factor = (user_requests[k] / total_user_request) * (gain[i, k, :] / total_gain)
+                p_bi_sk[i, k, :] = max_tx_power_watts * power_allocation_factor
 
     return p_bi_sk
