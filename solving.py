@@ -89,7 +89,7 @@ def optimize(num_UEs, num_RUs, num_DUs, num_CUs, num_RBs, max_tx_power_watts, rb
         # Danh sách ràng buộc
         constraints = []
 
-        # Ràng buộc (15b)
+        # Ràng buộc (15a)
         for k in range(num_UEs):
             R_sk = 0
             for b in range(num_RBs):
@@ -99,7 +99,7 @@ def optimize(num_UEs, num_RUs, num_DUs, num_CUs, num_RBs, max_tx_power_watts, rb
                 R_sk += rb_bandwidth * cp.log(1 + SNR) / np.log(2)
             constraints.append(R_sk >= R_min * cp.sum(pi_sk[k]))
 
-        # Ràng buộc (15c)
+        # Ràng buộc (15b)
         for i in range(num_RUs):
             tổng_công_suất = 0
             for b in range(num_RBs):
@@ -107,35 +107,35 @@ def optimize(num_UEs, num_RUs, num_DUs, num_CUs, num_RBs, max_tx_power_watts, rb
                     tổng_công_suất += P_bi_sk[i, k, b] * z_bi_sk[(i, k, b)]
             constraints.append(tổng_công_suất <= max_tx_power_watts)
 
-        # Ràng buộc (15d)
+        # Ràng buộc (15c)
         for j in range(num_DUs):
             count_du = cp.sum(phi_j_sk[j, :]) * D_j
             constraints.append(count_du <= A_j[j])
 
-        # Ràng buộc (15e)
+        # Ràng buộc (15d)
         for m in range(num_CUs):
             count_cu = cp.sum(phi_m_sk[m, :]) * D_m
             constraints.append(count_cu <= A_m[m])
 
-        # Ràng buộc (15f + 15g + 15h)
+        # Ràng buộc (15e + 15f + 15g)
         for k in range(num_UEs):
             constraints.append(cp.sum(phi_i_sk[:, k]) == cp.sum(pi_sk[k]))
             constraints.append(cp.sum(phi_j_sk[:, k]) == cp.sum(pi_sk[k]))
             constraints.append(cp.sum(phi_m_sk[:, k]) == cp.sum(pi_sk[k]))
 
-        # Ràng buộc (15i)
+        # Ràng buộc (15h)
         for i in range(num_RUs):
             for k in range(num_UEs):
                 for b in range(num_RBs):
                     constraints.append(z_bi_sk[(i, k, b)] <= phi_i_sk[i, k])
                     constraints.append(phi_i_sk[i, k] <= z_bi_sk[(i, k, b)] + (1 - epsilon))
 
-        # Ràng buộc (15j)
+        # Ràng buộc (15i)
         for i in range(num_RUs):
             for j in range (num_DUs):
                 constraints.append(phi_j_sk[j, :] <= l_ru_du[i, j] - phi_i_sk[i, :] + 1)
 
-        # Ràng buộc (15k)
+        # Ràng buộc (15j)
         for j in range (num_DUs):
             for m in range (num_CUs):
                 constraints.append(phi_m_sk[m, :] <= l_du_cu[j, m] - phi_j_sk[j, :] + 1)

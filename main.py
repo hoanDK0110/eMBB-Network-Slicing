@@ -4,6 +4,7 @@ import RAN_topo
 import solving
 import benchmark
 import numpy as np
+import csv
 
 num_RUs = 4                             # Số lượng RU
 num_DUs = 2                             # Số lượng DU
@@ -24,6 +25,7 @@ D_j = 20                                # yêu cầu tài nguyên của node DU
 D_m = 20                                # yêu cầu tài nguyên của node CU
 R_min = 1e6                             # Data rate ngưỡng yêu cầu
 epsilon = 1e-6
+user_requests = np.random.uniform(0, 20, num_UEs)
 
 
 # Tạo toạ độ RU, UE
@@ -46,7 +48,7 @@ A_j, A_m = RAN_topo.get_node_cap(G)
 gain = wireless.channel_gain(distances_RU_UE, num_RUs, num_UEs, num_RBs, noise_power_watts, num_antennas, path_loss_ref, path_loss_exp)
 
 # Tính phân bổ công suất
-P_bi_sk = wireless.allocate_power(num_RUs, num_UEs, num_RBs, max_tx_power_watts)
+P_bi_sk = wireless.allocate_power(num_RUs, num_UEs, num_RBs, max_tx_power_watts, gain, user_requests)
 
 # Solve tối ưu hóa ngắn hạn
 pi_sk, z_bi_sk, phi_i_sk, phi_j_sk, phi_m_sk = solving.optimize(num_UEs, num_RUs, num_DUs, num_CUs, num_RBs, max_tx_power_watts, rb_bandwidth, D_j, D_m, R_min, gain, P_bi_sk, A_j, A_m, l_ru_du, l_du_cu, epsilon)
@@ -112,6 +114,51 @@ if pi_long_term is not None:
     print(f"phi_i_long_term: {phi_i_long_term.value}")
     print(f"phi_j_long_term: {phi_j_long_term.value}")
     print(f"phi_m_long_term: {phi_m_long_term.value}")
+    
 
+# Ghi pi_sk ra file CSV (nếu pi_sk là một dictionary)
+with open('pi_sk.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["Index", "Accepted"])
+    if pi_sk.value is not None:
+        for idx, val in enumerate(pi_sk.value):
+            writer.writerow([idx, val])
+
+# Ghi z_bi_sk ra file CSV (nếu z_bi_sk là một dictionary)
+with open('z_bi_sk.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["(RU, UE, RB)", "Value"])
+    for i in range(num_RUs):
+        for k in range(num_UEs):
+            for b in range(num_RBs):  # z_bi_sk là dictionary
+                writer.writerow([i,k,b, z_bi_sk[(i, k, b)].value])
+
+# Ghi phi_i_sk ra file CSV (nếu phi_i_sk là một dictionary)
+with open('phi_i_sk.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["RU", "UE", "Value"])
+    if phi_i_sk.value is not None:
+        for ru in range(phi_i_sk.shape[0]):
+            for ue in range(phi_i_sk.shape[1]):
+                writer.writerow([ru, ue, phi_i_sk.value[ru, ue]])
+
+# Ghi phi_j_sk ra file CSV (nếu phi_j_sk là một dictionary)
+with open('phi_j_sk.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["DU", "UE", "Value"])
+    if phi_j_sk.value is not None:
+        for du in range(phi_j_sk.shape[0]):
+            for ue in range(phi_j_sk.shape[1]):
+                writer.writerow([du, ue, phi_j_sk.value[du, ue]])
+
+# Ghi phi_m_sk ra file CSV (nếu phi_m_sk là một dictionary)
+with open('phi_m_sk.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["CU", "UE", "Value"])
+    if phi_m_sk.value is not None:
+        for cu in range(phi_m_sk.shape[0]):
+            for ue in range(phi_m_sk.shape[1]):
+                writer.writerow([cu, ue, phi_m_sk.value[cu, ue]])
+            
 # Show kết quả ánh xạ (benchmark)
 benchmark.print_mapping(pi_sk, z_bi_sk, phi_i_sk, phi_j_sk, phi_m_sk)

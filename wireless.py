@@ -31,8 +31,6 @@ def channel_gain(distances_RU_UE, num_RUs, num_UEs, num_RBs, noise_power_watts, 
     return gain
 
 def allocate_power(num_RUs, num_UEs, num_RBs, max_tx_power_watts, gain, user_requests):
-    
-    user_requests = np.random.uniform(0, 20, num_UEs)
 
     # Khởi tạo ma trận công suất
     p_bi_sk = np.zeros((num_RUs, num_UEs, num_RBs))
